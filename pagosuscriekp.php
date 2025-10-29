@@ -1854,10 +1854,13 @@ class PagoSuscriekp extends PaymentModule
             $previous_due_date = $due_date;
         }
 
+        // IMPORTANTE: Liberar la referencia después del foreach
+        unset($installment);
+
         // Formatear total
         $total = 0;
-        foreach ($installments as $installment) {
-            $total += $installment['amount'];
+        foreach ($installments as $inst) {
+            $total += $inst['amount'];
         }
 
         $this->context->smarty->assign(array(
