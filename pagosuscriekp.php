@@ -1165,7 +1165,10 @@ class PagoSuscriekp extends PaymentModule
         foreach ($installments as $inst) {
             $date_type = isset($inst['date_type']) ? $inst['date_type'] : 'days';
             $date_value = $date_type == 'days' ? $inst['days_after_purchase'] : (isset($inst['fixed_date_day']) ? $inst['fixed_date_day'] : 1);
-            $month_value = isset($inst['fixed_date_month']) ? $inst['fixed_date_month'] : 1;
+            // Solo usar el mes guardado si es tipo fixed Y tiene un valor
+            $month_value = ($date_type == 'fixed' && isset($inst['fixed_date_month']) && $inst['fixed_date_month'] > 0)
+                ? $inst['fixed_date_month']
+                : date('n'); // mes actual por defecto
             $is_first = ($num == 1);
 
             $html .= '<tr class="installment-row">
@@ -1323,18 +1326,18 @@ class PagoSuscriekp extends PaymentModule
                                     <div class="input-group" style="flex: 1;">
                                         <span class="input-group-addon">' . $this->l('Mes') . '</span>
                                         <select name="installment_date_month[]" class="form-control date-month-field" disabled>
-                                            <option value="1">' . $this->l('Enero') . '</option>
-                                            <option value="2">' . $this->l('Febrero') . '</option>
-                                            <option value="3">' . $this->l('Marzo') . '</option>
-                                            <option value="4">' . $this->l('Abril') . '</option>
-                                            <option value="5">' . $this->l('Mayo') . '</option>
-                                            <option value="6">' . $this->l('Junio') . '</option>
-                                            <option value="7">' . $this->l('Julio') . '</option>
-                                            <option value="8">' . $this->l('Agosto') . '</option>
-                                            <option value="9">' . $this->l('Septiembre') . '</option>
-                                            <option value="10">' . $this->l('Octubre') . '</option>
-                                            <option value="11">' . $this->l('Noviembre') . '</option>
-                                            <option value="12">' . $this->l('Diciembre') . '</option>
+                                            <option value="1" ' . (date('n') == 1 ? 'selected' : '') . '>' . $this->l('Enero') . '</option>
+                                            <option value="2" ' . (date('n') == 2 ? 'selected' : '') . '>' . $this->l('Febrero') . '</option>
+                                            <option value="3" ' . (date('n') == 3 ? 'selected' : '') . '>' . $this->l('Marzo') . '</option>
+                                            <option value="4" ' . (date('n') == 4 ? 'selected' : '') . '>' . $this->l('Abril') . '</option>
+                                            <option value="5" ' . (date('n') == 5 ? 'selected' : '') . '>' . $this->l('Mayo') . '</option>
+                                            <option value="6" ' . (date('n') == 6 ? 'selected' : '') . '>' . $this->l('Junio') . '</option>
+                                            <option value="7" ' . (date('n') == 7 ? 'selected' : '') . '>' . $this->l('Julio') . '</option>
+                                            <option value="8" ' . (date('n') == 8 ? 'selected' : '') . '>' . $this->l('Agosto') . '</option>
+                                            <option value="9" ' . (date('n') == 9 ? 'selected' : '') . '>' . $this->l('Septiembre') . '</option>
+                                            <option value="10" ' . (date('n') == 10 ? 'selected' : '') . '>' . $this->l('Octubre') . '</option>
+                                            <option value="11" ' . (date('n') == 11 ? 'selected' : '') . '>' . $this->l('Noviembre') . '</option>
+                                            <option value="12" ' . (date('n') == 12 ? 'selected' : '') . '>' . $this->l('Diciembre') . '</option>
                                         </select>
                                     </div>
                                 </div>
