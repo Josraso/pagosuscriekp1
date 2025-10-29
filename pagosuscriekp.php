@@ -1816,8 +1816,9 @@ class PagoSuscriekp extends PaymentModule
                 $fixed_month = isset($installment['fixed_date_month']) ? (int)$installment['fixed_date_month'] : null;
 
                 if ($fixed_month) {
-                    // Fecha específica (día y mes): usar el año actual o siguiente
-                    $current_date = strtotime($previous_due_date);
+                    // Fecha específica (día y mes): SIEMPRE usar la fecha de compra como referencia
+                    // NO usar previous_due_date, queremos la fecha fija que el usuario configuró
+                    $current_date = strtotime($order_date);
                     $current_year = (int)date('Y', $current_date);
                     $current_month = (int)date('m', $current_date);
                     $current_day = (int)date('d', $current_date);
