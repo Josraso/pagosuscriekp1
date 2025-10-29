@@ -167,6 +167,7 @@ class PagoSuscriekpValidationModuleFrontController extends ModuleFrontController
             '{bank_owner}' => Configuration::get('PAGOSUSCRIEKP_BANK_OWNER'),
             '{bank_details}' => nl2br($bank_details_clean ? $bank_details_clean : 'No configurado'),
             '{bank_address}' => nl2br($bank_address_clean ? $bank_address_clean : ''),
+            '{year}' => date('Y'),
         );
 
         return Mail::Send(

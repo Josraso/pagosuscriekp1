@@ -97,6 +97,7 @@ class PagoSuscriekp extends PaymentModule
         $installment_columns = Db::getInstance()->executeS('SHOW COLUMNS FROM `' . _DB_PREFIX_ . 'pagosuscriekp_plan_installment`');
         $has_date_type = false;
         $has_fixed_date_day = false;
+        $has_fixed_date_month = false;
 
         foreach ($installment_columns as $column) {
             if ($column['Field'] == 'date_type') {
@@ -104,6 +105,9 @@ class PagoSuscriekp extends PaymentModule
             }
             if ($column['Field'] == 'fixed_date_day') {
                 $has_fixed_date_day = true;
+            }
+            if ($column['Field'] == 'fixed_date_month') {
+                $has_fixed_date_month = true;
             }
         }
 
@@ -118,6 +122,13 @@ class PagoSuscriekp extends PaymentModule
             Db::getInstance()->execute('
                 ALTER TABLE `' . _DB_PREFIX_ . 'pagosuscriekp_plan_installment`
                 ADD `fixed_date_day` int(11) DEFAULT NULL AFTER `date_type`
+            ');
+        }
+
+        if (!$has_fixed_date_month) {
+            Db::getInstance()->execute('
+                ALTER TABLE `' . _DB_PREFIX_ . 'pagosuscriekp_plan_installment`
+                ADD `fixed_date_month` int(11) DEFAULT NULL AFTER `fixed_date_day`
             ');
         }
 
@@ -524,6 +535,7 @@ class PagoSuscriekp extends PaymentModule
         $installments_amounts = Tools::getValue('installment_amount');
         $installments_date_types = Tools::getValue('installment_date_type');
         $installments_date_values = Tools::getValue('installment_date_value');
+        $installments_date_months = Tools::getValue('installment_date_month');
 
         if (!$name) {
             $this->html .= $this->displayError($this->l('El nombre del plan es obligatorio'));
@@ -565,16 +577,18 @@ class PagoSuscriekp extends PaymentModule
             $amount = (float)$amount;
             $date_type = pSQL($installments_date_types[$index]);
             $date_value = (int)$installments_date_values[$index];
+            $month_value = isset($installments_date_months[$index]) ? (int)$installments_date_months[$index] : null;
 
             if ($amount > 0) {
                 // Para el tipo "days", guardamos en days_after_purchase
-                // Para el tipo "fixed", guardamos en fixed_date_day
+                // Para el tipo "fixed", guardamos en fixed_date_day y fixed_date_month
                 $days_after = ($date_type == 'days') ? $date_value : 0;
                 $fixed_day = ($date_type == 'fixed') ? $date_value : 'NULL';
+                $fixed_month = ($date_type == 'fixed' && $month_value) ? $month_value : 'NULL';
 
                 $sql = 'INSERT INTO `' . _DB_PREFIX_ . 'pagosuscriekp_plan_installment`
-                        (id_plan, installment_number, amount, days_after_purchase, date_type, fixed_date_day)
-                        VALUES (' . $id_plan . ', ' . ($index + 1) . ', ' . $amount . ', ' . $days_after . ', "' . $date_type . '", ' . $fixed_day . ')';
+                        (id_plan, installment_number, amount, days_after_purchase, date_type, fixed_date_day, fixed_date_month)
+                        VALUES (' . $id_plan . ', ' . ($index + 1) . ', ' . $amount . ', ' . $days_after . ', "' . $date_type . '", ' . $fixed_day . ', ' . $fixed_month . ')';
                 Db::getInstance()->execute($sql);
             }
         }
@@ -1151,6 +1165,7 @@ class PagoSuscriekp extends PaymentModule
         foreach ($installments as $inst) {
             $date_type = isset($inst['date_type']) ? $inst['date_type'] : 'days';
             $date_value = $date_type == 'days' ? $inst['days_after_purchase'] : (isset($inst['fixed_date_day']) ? $inst['fixed_date_day'] : 1);
+            $month_value = isset($inst['fixed_date_month']) ? $inst['fixed_date_month'] : 1;
             $is_first = ($num == 1);
 
             $html .= '<tr class="installment-row">
@@ -1187,10 +1202,31 @@ class PagoSuscriekp extends PaymentModule
                                        min="1" value="' . ($date_type == 'days' ? $date_value : 30) . '" ' . ($date_type == 'days' ? '' : 'disabled') . '>
                                 <span class="input-group-addon">' . $this->l('días') . '</span>
                             </div>
-                            <div class="input-group fixed-input" style="display: ' . ($date_type == 'fixed' ? 'flex' : 'none') . ';">
-                                <span class="input-group-addon">' . $this->l('Día') . '</span>
-                                <input type="number" name="installment_date_value[]" class="form-control date-value-field"
-                                       min="1" max="28" value="' . ($date_type == 'fixed' ? $date_value : 15) . '" ' . ($date_type == 'fixed' ? '' : 'disabled') . '>
+                            <div class="fixed-input" style="display: ' . ($date_type == 'fixed' ? 'block' : 'none') . ';">
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="input-group" style="flex: 1;">
+                                        <span class="input-group-addon">' . $this->l('Día') . '</span>
+                                        <input type="number" name="installment_date_value[]" class="form-control date-value-field"
+                                               min="1" max="31" value="' . ($date_type == 'fixed' ? $date_value : 15) . '" ' . ($date_type == 'fixed' ? '' : 'disabled') . '>
+                                    </div>
+                                    <div class="input-group" style="flex: 1;">
+                                        <span class="input-group-addon">' . $this->l('Mes') . '</span>
+                                        <select name="installment_date_month[]" class="form-control date-month-field" ' . ($date_type == 'fixed' ? '' : 'disabled') . '>
+                                            <option value="1" ' . ($month_value == 1 ? 'selected' : '') . '>' . $this->l('Enero') . '</option>
+                                            <option value="2" ' . ($month_value == 2 ? 'selected' : '') . '>' . $this->l('Febrero') . '</option>
+                                            <option value="3" ' . ($month_value == 3 ? 'selected' : '') . '>' . $this->l('Marzo') . '</option>
+                                            <option value="4" ' . ($month_value == 4 ? 'selected' : '') . '>' . $this->l('Abril') . '</option>
+                                            <option value="5" ' . ($month_value == 5 ? 'selected' : '') . '>' . $this->l('Mayo') . '</option>
+                                            <option value="6" ' . ($month_value == 6 ? 'selected' : '') . '>' . $this->l('Junio') . '</option>
+                                            <option value="7" ' . ($month_value == 7 ? 'selected' : '') . '>' . $this->l('Julio') . '</option>
+                                            <option value="8" ' . ($month_value == 8 ? 'selected' : '') . '>' . $this->l('Agosto') . '</option>
+                                            <option value="9" ' . ($month_value == 9 ? 'selected' : '') . '>' . $this->l('Septiembre') . '</option>
+                                            <option value="10" ' . ($month_value == 10 ? 'selected' : '') . '>' . $this->l('Octubre') . '</option>
+                                            <option value="11" ' . ($month_value == 11 ? 'selected' : '') . '>' . $this->l('Noviembre') . '</option>
+                                            <option value="12" ' . ($month_value == 12 ? 'selected' : '') . '>' . $this->l('Diciembre') . '</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>';
             }
@@ -1277,10 +1313,31 @@ class PagoSuscriekp extends PaymentModule
                                        min="1" value="30">
                                 <span class="input-group-addon">' . $this->l('días') . '</span>
                             </div>
-                            <div class="input-group fixed-input" style="display: none;">
-                                <span class="input-group-addon">' . $this->l('Día') . '</span>
-                                <input type="number" name="installment_date_value[]" class="form-control date-value-field"
-                                       min="1" max="28" value="15" disabled>
+                            <div class="fixed-input" style="display: none;">
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="input-group" style="flex: 1;">
+                                        <span class="input-group-addon">' . $this->l('Día') . '</span>
+                                        <input type="number" name="installment_date_value[]" class="form-control date-value-field"
+                                               min="1" max="31" value="15" disabled>
+                                    </div>
+                                    <div class="input-group" style="flex: 1;">
+                                        <span class="input-group-addon">' . $this->l('Mes') . '</span>
+                                        <select name="installment_date_month[]" class="form-control date-month-field" disabled>
+                                            <option value="1">' . $this->l('Enero') . '</option>
+                                            <option value="2">' . $this->l('Febrero') . '</option>
+                                            <option value="3">' . $this->l('Marzo') . '</option>
+                                            <option value="4">' . $this->l('Abril') . '</option>
+                                            <option value="5">' . $this->l('Mayo') . '</option>
+                                            <option value="6">' . $this->l('Junio') . '</option>
+                                            <option value="7">' . $this->l('Julio') . '</option>
+                                            <option value="8">' . $this->l('Agosto') . '</option>
+                                            <option value="9">' . $this->l('Septiembre') . '</option>
+                                            <option value="10">' . $this->l('Octubre') . '</option>
+                                            <option value="11">' . $this->l('Noviembre') . '</option>
+                                            <option value="12">' . $this->l('Diciembre') . '</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </td>
@@ -1318,10 +1375,10 @@ class PagoSuscriekp extends PaymentModule
 
                 if (dateType === "days") {
                     $daysInput.show().find("input").prop("disabled", false);
-                    $fixedInput.hide().find("input").prop("disabled", true);
+                    $fixedInput.hide().find("input, select").prop("disabled", true);
                 } else {
                     $daysInput.hide().find("input").prop("disabled", true);
-                    $fixedInput.show().find("input").prop("disabled", false);
+                    $fixedInput.show().find("input, select").prop("disabled", false);
                 }
             });
 

@@ -255,6 +255,7 @@ class SubscriptionPayment extends ObjectModel
             '{bank_owner}' => Configuration::get('PAGOSUSCRIEKP_BANK_OWNER'),
             '{bank_details}' => nl2br(Configuration::get('PAGOSUSCRIEKP_BANK_DETAILS')),
             '{bank_address}' => nl2br(Configuration::get('PAGOSUSCRIEKP_BANK_ADDRESS')),
+            '{year}' => date('Y'),
         );
 
         // Enviar correo
@@ -312,6 +313,14 @@ class SubscriptionPayment extends ObjectModel
 
         $pending_amount = $subscription->getPendingAmount();
 
+        // Preparar HTML para próximo pago o completado
+        if ($next_payment_date) {
+            $next_payment_info = '<p><strong>📅 Próximo pago:</strong> ' . $next_payment_date . '</p>' .
+                                '<p>Te enviaremos un recordatorio antes de la fecha de vencimiento.</p>';
+        } else {
+            $next_payment_info = '<p style="color: #27ae60; font-weight: bold;">🎉 ¡Has completado todos los pagos de esta suscripción!</p>';
+        }
+
         // Preparar variables para el correo
         $templateVars = array(
             '{firstname}' => $customer->firstname,
@@ -324,6 +333,8 @@ class SubscriptionPayment extends ObjectModel
             '{total_count}' => $total_count,
             '{pending_amount}' => Tools::displayPrice($pending_amount),
             '{next_payment_date}' => $next_payment_date ? $next_payment_date : '',
+            '{next_payment_info}' => $next_payment_info,
+            '{year}' => date('Y'),
         );
 
         // Enviar correo

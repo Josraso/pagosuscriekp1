@@ -145,12 +145,7 @@
                 <p>Importe pendiente: <strong>{pending_amount}</strong></p>
             </div>
 
-            {if $next_payment_date}
-            <p><strong>📅 Próximo pago:</strong> {next_payment_date}</p>
-            <p>Te enviaremos un recordatorio antes de la fecha de vencimiento.</p>
-            {else}
-            <p style="color: #27ae60; font-weight: bold;">🎉 ¡Has completado todos los pagos de esta suscripción!</p>
-            {/if}
+            {next_payment_info}
 
             <p style="margin-top: 30px;">
                 <strong>Gracias por tu pago,</strong><br>
@@ -161,7 +156,7 @@
         <!-- Footer -->
         <div class="footer">
             <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
-            <p>&copy; {date('Y')} Todos los derechos reservados</p>
+            <p>&copy; {year} Todos los derechos reservados</p>
         </div>
 
     </div>

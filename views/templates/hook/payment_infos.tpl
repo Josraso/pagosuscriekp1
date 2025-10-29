@@ -16,7 +16,7 @@
                     <tr>
                         <th class="text-center">{l s='Cuota' mod='pagosuscriekp'}</th>
                         <th class="text-center">{l s='Importe' mod='pagosuscriekp'}</th>
-                        <th class="text-center">{l s='Días después de la compra' mod='pagosuscriekp'}</th>
+                        <th class="text-center">{l s='Fecha de pago' mod='pagosuscriekp'}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -29,10 +29,29 @@
                                 <span class="price">{$installment.amount_formatted nofilter}</span>
                             </td>
                             <td class="text-center">
-                                {if $installment.days_after_purchase == 0}
+                                {if $installment.installment_number == 1}
                                     <span class="badge badge-success">{l s='Inmediato' mod='pagosuscriekp'}</span>
+                                {elseif isset($installment.date_type) && $installment.date_type == 'fixed'}
+                                    {if isset($installment.fixed_date_month) && $installment.fixed_date_month}
+                                        {l s='Día' mod='pagosuscriekp'} {$installment.fixed_date_day} {l s='de' mod='pagosuscriekp'}
+                                        {if $installment.fixed_date_month == 1}{l s='Enero' mod='pagosuscriekp'}
+                                        {elseif $installment.fixed_date_month == 2}{l s='Febrero' mod='pagosuscriekp'}
+                                        {elseif $installment.fixed_date_month == 3}{l s='Marzo' mod='pagosuscriekp'}
+                                        {elseif $installment.fixed_date_month == 4}{l s='Abril' mod='pagosuscriekp'}
+                                        {elseif $installment.fixed_date_month == 5}{l s='Mayo' mod='pagosuscriekp'}
+                                        {elseif $installment.fixed_date_month == 6}{l s='Junio' mod='pagosuscriekp'}
+                                        {elseif $installment.fixed_date_month == 7}{l s='Julio' mod='pagosuscriekp'}
+                                        {elseif $installment.fixed_date_month == 8}{l s='Agosto' mod='pagosuscriekp'}
+                                        {elseif $installment.fixed_date_month == 9}{l s='Septiembre' mod='pagosuscriekp'}
+                                        {elseif $installment.fixed_date_month == 10}{l s='Octubre' mod='pagosuscriekp'}
+                                        {elseif $installment.fixed_date_month == 11}{l s='Noviembre' mod='pagosuscriekp'}
+                                        {elseif $installment.fixed_date_month == 12}{l s='Diciembre' mod='pagosuscriekp'}
+                                        {/if}
+                                    {else}
+                                        {l s='Día' mod='pagosuscriekp'} {$installment.fixed_date_day} {l s='del mes siguiente' mod='pagosuscriekp'}
+                                    {/if}
                                 {else}
-                                    {$installment.days_after_purchase} {l s='días' mod='pagosuscriekp'}
+                                    {$installment.days_after_purchase} {l s='días después del pago anterior' mod='pagosuscriekp'}
                                 {/if}
                             </td>
                         </tr>

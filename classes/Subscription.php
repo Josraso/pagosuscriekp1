@@ -125,19 +125,39 @@ class Subscription extends ObjectModel
             $date_type = isset($installment['date_type']) ? $installment['date_type'] : 'days';
 
             if ($date_type == 'fixed' && $installment['fixed_date_day']) {
-                // Día fijo del mes: calcular siguiente ocurrencia del día especificado
                 $fixed_day = (int)$installment['fixed_date_day'];
-                $current_date = strtotime($previous_due_date);
-                $current_day = (int)date('d', $current_date);
+                $fixed_month = isset($installment['fixed_date_month']) ? (int)$installment['fixed_date_month'] : null;
 
-                // Si el día fijo ya pasó en el mes actual, ir al mes siguiente
-                if ($current_day >= $fixed_day) {
-                    // Próximo mes
-                    $next_month = date('Y-m-01', strtotime($previous_due_date . ' +1 month'));
-                    $due_date = date('Y-m-' . str_pad($fixed_day, 2, '0', STR_PAD_LEFT), strtotime($next_month));
+                if ($fixed_month) {
+                    // Fecha específica (día y mes): usar el año actual o siguiente
+                    $current_date = strtotime($previous_due_date);
+                    $current_year = (int)date('Y', $current_date);
+                    $current_month = (int)date('m', $current_date);
+                    $current_day = (int)date('d', $current_date);
+
+                    // Construir la fecha con el año actual
+                    $target_date = $current_year . '-' . str_pad($fixed_month, 2, '0', STR_PAD_LEFT) . '-' . str_pad($fixed_day, 2, '0', STR_PAD_LEFT);
+
+                    // Si la fecha objetivo ya pasó este año, usar el año siguiente
+                    if ($current_month > $fixed_month || ($current_month == $fixed_month && $current_day >= $fixed_day)) {
+                        $target_date = ($current_year + 1) . '-' . str_pad($fixed_month, 2, '0', STR_PAD_LEFT) . '-' . str_pad($fixed_day, 2, '0', STR_PAD_LEFT);
+                    }
+
+                    $due_date = $target_date;
                 } else {
-                    // Mismo mes
-                    $due_date = date('Y-m-' . str_pad($fixed_day, 2, '0', STR_PAD_LEFT), $current_date);
+                    // Día fijo del mes (sin mes específico): calcular siguiente ocurrencia del día
+                    $current_date = strtotime($previous_due_date);
+                    $current_day = (int)date('d', $current_date);
+
+                    // Si el día fijo ya pasó en el mes actual, ir al mes siguiente
+                    if ($current_day >= $fixed_day) {
+                        // Próximo mes
+                        $next_month = date('Y-m-01', strtotime($previous_due_date . ' +1 month'));
+                        $due_date = date('Y-m-' . str_pad($fixed_day, 2, '0', STR_PAD_LEFT), strtotime($next_month));
+                    } else {
+                        // Mismo mes
+                        $due_date = date('Y-m-' . str_pad($fixed_day, 2, '0', STR_PAD_LEFT), $current_date);
+                    }
                 }
             } else {
                 // Días después: calcular acumulativamente
@@ -363,6 +383,7 @@ class Subscription extends ObjectModel
             '{total_amount}' => Tools::displayPrice($total_amount),
             '{subscription_start_date}' => date('d/m/Y', strtotime($this->date_add)),
             '{completion_date}' => date('d/m/Y H:i'),
+            '{year}' => date('Y'),
         );
 
         // Enviar correo
