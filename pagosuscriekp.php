@@ -1801,10 +1801,62 @@ class PagoSuscriekp extends PaymentModule
     {
         $installments = $this->getPlanInstallments($plan['id_plan']);
 
-        // Formatear precios de las cuotas
-        $total = 0;
+        // Calcular fechas reales de vencimiento para cada cuota (simulando como si fuera hoy la compra)
+        $order_date = date('Y-m-d'); // Fecha de hoy como referencia
+        $previous_due_date = $order_date;
+
         foreach ($installments as &$installment) {
             $installment['amount_formatted'] = Tools::displayPrice($installment['amount']);
+
+            // Calcular fecha de vencimiento según el tipo
+            $date_type = isset($installment['date_type']) ? $installment['date_type'] : 'days';
+
+            if ($date_type == 'fixed' && $installment['fixed_date_day']) {
+                $fixed_day = (int)$installment['fixed_date_day'];
+                $fixed_month = isset($installment['fixed_date_month']) ? (int)$installment['fixed_date_month'] : null;
+
+                if ($fixed_month) {
+                    // Fecha específica (día y mes): usar el año actual o siguiente
+                    $current_date = strtotime($previous_due_date);
+                    $current_year = (int)date('Y', $current_date);
+                    $current_month = (int)date('m', $current_date);
+                    $current_day = (int)date('d', $current_date);
+
+                    // Construir la fecha con el año actual
+                    $target_date = $current_year . '-' . str_pad($fixed_month, 2, '0', STR_PAD_LEFT) . '-' . str_pad($fixed_day, 2, '0', STR_PAD_LEFT);
+
+                    // Si la fecha objetivo ya pasó este año, usar el año siguiente
+                    if ($current_month > $fixed_month || ($current_month == $fixed_month && $current_day >= $fixed_day)) {
+                        $target_date = ($current_year + 1) . '-' . str_pad($fixed_month, 2, '0', STR_PAD_LEFT) . '-' . str_pad($fixed_day, 2, '0', STR_PAD_LEFT);
+                    }
+
+                    $due_date = $target_date;
+                } else {
+                    // Día fijo del mes (sin mes específico): calcular siguiente ocurrencia del día
+                    $current_date = strtotime($previous_due_date);
+                    $current_day = (int)date('d', $current_date);
+
+                    if ($current_day >= $fixed_day) {
+                        $next_month = date('Y-m-01', strtotime($previous_due_date . ' +1 month'));
+                        $due_date = date('Y-m-' . str_pad($fixed_day, 2, '0', STR_PAD_LEFT), strtotime($next_month));
+                    } else {
+                        $due_date = date('Y-m-' . str_pad($fixed_day, 2, '0', STR_PAD_LEFT), $current_date);
+                    }
+                }
+            } else {
+                // Días después
+                $days_after = (int)$installment['days_after_purchase'];
+                $due_date = date('Y-m-d', strtotime($previous_due_date . ' +' . $days_after . ' days'));
+            }
+
+            $installment['calculated_due_date'] = $due_date;
+            $installment['calculated_due_date_formatted'] = date('d/m/Y', strtotime($due_date));
+            $previous_due_date = $due_date;
+        }
+
+        // Formatear total
+        $total = 0;
+        foreach ($installments as $installment) {
             $total += $installment['amount'];
         }
 
