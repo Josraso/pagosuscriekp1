@@ -572,19 +572,51 @@ class PagoSuscriekp extends PaymentModule
             $id_plan = Db::getInstance()->Insert_ID();
         }
 
+        // Filtrar valores vacíos de los arrays (causados por campos ocultos)
+        // Esto soluciona el problema de desalineación de arrays
+        $filtered_date_values = array();
+        $filtered_date_months = array();
+
+        foreach ($installments_date_values as $val) {
+            if ($val !== '' && $val !== null) {
+                $filtered_date_values[] = $val;
+            }
+        }
+
+        foreach ($installments_date_months as $val) {
+            if ($val !== '' && $val !== null && $val > 0) {
+                $filtered_date_months[] = $val;
+            }
+        }
+
         // Insertar cuotas
+        $value_index = 0;
+        $month_index = 0;
+
         foreach ($installments_amounts as $index => $amount) {
             $amount = (float)$amount;
             $date_type = pSQL($installments_date_types[$index]);
-            $date_value = (int)$installments_date_values[$index];
-            $month_value = isset($installments_date_months[$index]) ? (int)$installments_date_months[$index] : null;
 
             if ($amount > 0) {
-                // Para el tipo "days", guardamos en days_after_purchase
-                // Para el tipo "fixed", guardamos en fixed_date_day y fixed_date_month
-                $days_after = ($date_type == 'days') ? $date_value : 0;
-                $fixed_day = ($date_type == 'fixed') ? $date_value : 'NULL';
-                $fixed_month = ($date_type == 'fixed' && $month_value) ? $month_value : 'NULL';
+                // Obtener el valor correcto según el tipo
+                if ($date_type == 'days') {
+                    $date_value = isset($filtered_date_values[$value_index]) ? (int)$filtered_date_values[$value_index] : 0;
+                    $days_after = $date_value;
+                    $fixed_day = 'NULL';
+                    $fixed_month = 'NULL';
+                    $value_index++;
+                } else {
+                    // Tipo fixed
+                    $date_value = isset($filtered_date_values[$value_index]) ? (int)$filtered_date_values[$value_index] : 1;
+                    $month_value = isset($filtered_date_months[$month_index]) ? (int)$filtered_date_months[$month_index] : null;
+
+                    $days_after = 0;
+                    $fixed_day = $date_value;
+                    $fixed_month = $month_value ? $month_value : 'NULL';
+
+                    $value_index++;
+                    $month_index++;
+                }
 
                 $sql = 'INSERT INTO `' . _DB_PREFIX_ . 'pagosuscriekp_plan_installment`
                         (id_plan, installment_number, amount, days_after_purchase, date_type, fixed_date_day, fixed_date_month)
@@ -1377,11 +1409,18 @@ class PagoSuscriekp extends PaymentModule
                 var $fixedInput = $row.find(".fixed-input");
 
                 if (dateType === "days") {
+                    // Mostrar días, ocultar fecha fija
                     $daysInput.show();
                     $fixedInput.hide();
+                    // Vaciar valores de fecha fija para que no se envíen
+                    $fixedInput.find("input").val("");
+                    $fixedInput.find("select").val("1");
                 } else {
+                    // Mostrar fecha fija, ocultar días
                     $daysInput.hide();
                     $fixedInput.show();
+                    // Vaciar valor de días para que no se envíe
+                    $daysInput.find("input").val("");
                 }
             });
 
