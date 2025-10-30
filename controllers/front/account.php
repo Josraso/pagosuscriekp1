@@ -22,7 +22,7 @@ class PagoSuscriekpAccountModuleFrontController extends ModuleFrontController
         $id_customer = (int)$this->context->customer->id;
 
         // Obtener suscripciones del cliente
-        $sql = 'SELECT s.*, o.reference as order_reference
+        $sql = 'SELECT s.*, o.reference as order_reference, o.id_cart
                 FROM ' . _DB_PREFIX_ . 'pagosuscriekp_subscription s
                 LEFT JOIN ' . _DB_PREFIX_ . 'orders o ON o.id_order = s.id_order
                 WHERE s.id_customer = ' . (int)$id_customer . '
@@ -36,6 +36,16 @@ class PagoSuscriekpAccountModuleFrontController extends ModuleFrontController
             foreach ($subscriptions_data as $sub_data) {
                 $subscription = new Subscription($sub_data['id_subscription']);
                 $payments = $subscription->getPayments();
+
+                // Obtener nombre del producto del pedido
+                $product_name = '';
+                if ($sub_data['id_cart']) {
+                    $cart = new Cart($sub_data['id_cart']);
+                    $products = $cart->getProducts();
+                    if (!empty($products)) {
+                        $product_name = $products[0]['name'];
+                    }
+                }
 
                 $paid_count = 0;
                 $pending_count = 0;
@@ -71,6 +81,7 @@ class PagoSuscriekpAccountModuleFrontController extends ModuleFrontController
                 $subscriptions[] = array(
                     'subscription' => $subscription,
                     'order_reference' => $sub_data['order_reference'],
+                    'product_name' => $product_name,
                     'date_add_formatted' => $date_add_formatted,
                     'payments' => $payments_formatted,
                     'paid_count' => $paid_count,

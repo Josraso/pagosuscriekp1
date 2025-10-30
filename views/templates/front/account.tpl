@@ -26,7 +26,12 @@
                             <div class="col-md-6">
                                 <h3 style="margin: 0; font-size: 18px;">
                                     <i class="material-icons" style="vertical-align: middle;">&#xE8B8;</i>
-                                    {l s='Suscripción' mod='pagosuscriekp'} #{$sub.subscription->id|intval}
+                                    {if $sub.product_name}
+                                        {$sub.product_name|escape:'html':'UTF-8'}
+                                    {else}
+                                        {l s='Suscripción' mod='pagosuscriekp'}
+                                    {/if}
+                                    <span style="color: #999; font-size: 16px;">#{$sub.subscription->id|intval}</span>
                                     {if $sub.is_fully_paid}
                                         <i class="material-icons toggle-icon" id="toggle-icon-{$sub.subscription->id|intval}" style="vertical-align: middle; font-size: 20px; transition: transform 0.3s;">&#xE5C5;</i>
                                     {/if}
