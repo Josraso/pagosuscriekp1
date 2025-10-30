@@ -126,7 +126,7 @@ class Subscription extends ObjectModel
 
             if ($date_type == 'fixed' && $installment['fixed_date_day']) {
                 $fixed_day = (int)$installment['fixed_date_day'];
-                $fixed_month = isset($installment['fixed_date_month']) ? (int)$installment['fixed_date_month'] : null;
+                $fixed_month = !empty($installment['fixed_date_month']) ? (int)$installment['fixed_date_month'] : null;
 
                 if ($fixed_month) {
                     // Fecha específica (día y mes): SIEMPRE usar la fecha de compra como referencia
