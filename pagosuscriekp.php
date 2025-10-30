@@ -1202,7 +1202,7 @@ class PagoSuscriekp extends PaymentModule
                 $html .= '<div class="date-value-container">
                             <div class="input-group days-input" style="display: ' . ($date_type == 'days' ? 'flex' : 'none') . ';">
                                 <input type="number" name="installment_date_value[]" class="form-control date-value-field"
-                                       min="1" value="' . ($date_type == 'days' ? $date_value : 30) . '" ' . ($date_type == 'days' ? '' : 'disabled') . '>
+                                       min="1" value="' . ($date_type == 'days' ? $date_value : 30) . '">
                                 <span class="input-group-addon">' . $this->l('días') . '</span>
                             </div>
                             <div class="fixed-input" style="display: ' . ($date_type == 'fixed' ? 'block' : 'none') . ';">
@@ -1210,11 +1210,11 @@ class PagoSuscriekp extends PaymentModule
                                     <div class="input-group" style="flex: 1;">
                                         <span class="input-group-addon">' . $this->l('Día') . '</span>
                                         <input type="number" name="installment_date_value[]" class="form-control date-value-field"
-                                               min="1" max="31" value="' . ($date_type == 'fixed' ? $date_value : 15) . '" ' . ($date_type == 'fixed' ? '' : 'disabled') . '>
+                                               min="1" max="31" value="' . ($date_type == 'fixed' ? $date_value : 15) . '">
                                     </div>
                                     <div class="input-group" style="flex: 1;">
                                         <span class="input-group-addon">' . $this->l('Mes') . '</span>
-                                        <select name="installment_date_month[]" class="form-control date-month-field" ' . ($date_type == 'fixed' ? '' : 'disabled') . '>
+                                        <select name="installment_date_month[]" class="form-control date-month-field">
                                             <option value="1" ' . ($month_value == 1 ? 'selected' : '') . '>' . $this->l('Enero') . '</option>
                                             <option value="2" ' . ($month_value == 2 ? 'selected' : '') . '>' . $this->l('Febrero') . '</option>
                                             <option value="3" ' . ($month_value == 3 ? 'selected' : '') . '>' . $this->l('Marzo') . '</option>
@@ -1321,11 +1321,11 @@ class PagoSuscriekp extends PaymentModule
                                     <div class="input-group" style="flex: 1;">
                                         <span class="input-group-addon">' . $this->l('Día') . '</span>
                                         <input type="number" name="installment_date_value[]" class="form-control date-value-field"
-                                               min="1" max="31" value="15" disabled>
+                                               min="1" max="31" value="15">
                                     </div>
                                     <div class="input-group" style="flex: 1;">
                                         <span class="input-group-addon">' . $this->l('Mes') . '</span>
-                                        <select name="installment_date_month[]" class="form-control date-month-field" disabled>
+                                        <select name="installment_date_month[]" class="form-control date-month-field">
                                             <option value="1" ' . (date('n') == 1 ? 'selected' : '') . '>' . $this->l('Enero') . '</option>
                                             <option value="2" ' . (date('n') == 2 ? 'selected' : '') . '>' . $this->l('Febrero') . '</option>
                                             <option value="3" ' . (date('n') == 3 ? 'selected' : '') . '>' . $this->l('Marzo') . '</option>
@@ -1377,11 +1377,11 @@ class PagoSuscriekp extends PaymentModule
                 var $fixedInput = $row.find(".fixed-input");
 
                 if (dateType === "days") {
-                    $daysInput.show().find("input").prop("disabled", false);
-                    $fixedInput.hide().find("input, select").prop("disabled", true);
+                    $daysInput.show();
+                    $fixedInput.hide();
                 } else {
-                    $daysInput.hide().find("input").prop("disabled", true);
-                    $fixedInput.show().find("input, select").prop("disabled", false);
+                    $daysInput.hide();
+                    $fixedInput.show();
                 }
             });
 
